@@ -1,0 +1,35 @@
+Install python 3.12 first. If your version is higher downgrade it to this version
+Remember to find your Python\Python312\ and Python\Python312\Scripts\ directories,
+then copy their directories and add it in your environment variables' path in users.
+
+If you use VSCode and already installed python 3.12. ctrl+shift p then search select interpreter and select python 3.12
+
+Create the environment:
+
+(PowerShell)
+py -3.12 -m venv venv
+
+Activate the environment:
+
+(PowerShell)
+.\venv\Scripts\activate
+
+
+Download dependencies:
+
+pip install -r requirements.txt
+
+
+Download tools for for external parser:
+
+pip install spacy
+pip install benepar
+
+python -m spacy download en_core_web_md
+
+python -c "import benepar; benepar.download('benepar_en3')"
+
+run the model:
+
+python model.py
+
