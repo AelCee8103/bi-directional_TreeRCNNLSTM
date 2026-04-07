@@ -684,8 +684,8 @@ def main():
     results_df['V_pred'] = predictions[:, 0]
     results_df['A_pred'] = predictions[:, 1]
     results_df['D_pred'] = predictions[:, 2]
-    results_df.to_csv('predictions.csv', index=False)
-    print("\nPredictions saved to predictions.csv")
+    results_df.to_csv('model2_predictions.csv', index=False)
+    print("\nPredictions saved to model2_predictions.csv")
 
 
 if __name__ == '__main__':
