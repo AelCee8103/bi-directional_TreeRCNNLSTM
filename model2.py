@@ -191,12 +191,15 @@ class TreeLSTM(nn.Module):
                     child_h.append(child.hidden)
                     child_c.append(child.cell)
 
-                # Average of child features as input (can also use concatenation)
-                child_h_avg = torch.stack(child_h).mean(dim=0)
                 child_c_sum = sum(child_c)
 
-                # Use average child hidden as input to this node
-                h, c = self.cell(child_h_avg, child_h, child_c_sum)
+                # FIX: Internal nodes in a constituent tree don't have their own word inputs. 
+                # We pass a zero-tensor of the expected input_size (feature_dim)
+                feat_dim = leaf_features.size(-1)
+                x_empty = torch.zeros(1, feat_dim, device=leaf_features.device)
+
+                h, c = self.cell(x_empty, child_h, child_c_sum)
+                
                 node.hidden = h
                 node.cell = c
                 return h, c
@@ -241,11 +244,8 @@ class TreeStructuredRCNNLSTM(nn.Module):
         self.cnn = RegionalCNN(embed_dim, num_filters, filter_sizes)
         cnn_output_dim = num_filters * len(filter_sizes)
 
-        # Project CNN output down to hidden_size
-        self.leaf_proj = nn.Linear(cnn_output_dim, hidden_size)
-
         # Tree-LSTM
-        self.tree_lstm = TreeLSTM(hidden_size, hidden_size)
+        self.tree_lstm = TreeLSTM(cnn_output_dim, hidden_size)
 
         # Output layer for VAD regression
         self.fc = nn.Sequential(
@@ -273,18 +273,18 @@ class TreeStructuredRCNNLSTM(nn.Module):
         # 2. Extract Regional CNN features
         cnn_features = self.cnn(embedded)  # (batch, cnn_output_dim)
         
-       # Expand CNN features to match sequence length (simulating phrase-level broadcast)
+        # Expand CNN features to match sequence length (simulating phrase-level broadcast)
         cnn_expanded = cnn_features.unsqueeze(1).expand(batch_size, seq_len, cnn_features.size(1))
-        
+
         # 3. Hierarchical composition via Tree-LSTM
         root_hiddens = []
         for i, tree in enumerate(trees):
-            # Pass the expanded AND projected CNN features
-            tree_leaf_features = self.leaf_proj(cnn_expanded[i])  # <-- Added self.leaf_proj()
+            # Pass the expanded CNN features for this specific batch item
+            tree_leaf_features = cnn_expanded[i] 
             root_h = self.tree_lstm(tree, tree_leaf_features)
-            root_hiddens.append(root_h.squeeze(0))  # <-- Added .squeeze(0) to remove the batch dim
+            root_hiddens.append(root_h)
 
-        root_hidden = torch.stack(root_hiddens, dim=0)  # (batch, hidden_size)
+        root_hidden = torch.cat(root_hiddens, dim=0)  # (batch, hidden_size)
         root_hidden = self.dropout(root_hidden)
 
         # 4. Predict VAD
