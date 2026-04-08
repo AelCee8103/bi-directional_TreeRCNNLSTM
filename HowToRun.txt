@@ -29,6 +29,9 @@ python -m spacy download en_core_web_md
 
 python -c "import benepar; benepar.download('benepar_en3')"
 
+
+download the pretrained embedding in this link: https://drive.google.com/file/d/19bwvt0fX6VUEzeQH3rIMq8Nc6S3ISDJh/view?usp=sharing
+
 run the model:
 
 python model.py
