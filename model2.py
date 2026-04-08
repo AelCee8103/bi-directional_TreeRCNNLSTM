@@ -9,6 +9,8 @@ Architecture:
 4. Regression output layer for V, A, D prediction
 """
 
+import random
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -612,7 +614,19 @@ def load_glove_embeddings(glove_txt_path, word2idx, embed_dim=300):
 
     return torch.FloatTensor(matrix)
 
+def set_seed(seed_value=42):
+    """Set seed for reproducibility."""
+    random.seed(seed_value)
+    np.random.seed(seed_value)
+    torch.manual_seed(seed_value)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed_value)
+        torch.cuda.manual_seed_all(seed_value)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
 def main():
+    set_seed(42)  # Set seed for reproducibility
     # Configuration
     DATA_PATH = './emobank.csv'
     EMBED_DIM = 300
