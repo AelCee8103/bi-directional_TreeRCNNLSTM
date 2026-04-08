@@ -578,6 +578,39 @@ def train_model(
     model.load_state_dict(torch.load('best_model.pt'))
     return model
 
+def load_glove_embeddings(glove_txt_path, word2idx, embed_dim=300):
+    # Define the path for the fast-loading numpy file
+    saved_matrix_path = 'glove_embeddings_cached.npy'
+
+    # 1. Check if we already parsed and saved it
+    if os.path.exists(saved_matrix_path):
+        print(f"Loading cached embeddings from {saved_matrix_path}...")
+        matrix = np.load(saved_matrix_path)
+        return torch.FloatTensor(matrix)
+
+    # 2. If not, we parse the massive text file
+    print(f"Parsing raw GloVe file from {glove_txt_path}...")
+    matrix = np.random.normal(scale=0.1, size=(len(word2idx), embed_dim))
+    matrix[word2idx.get('<PAD>', 0)] = 0.0  # Zero out the padding index
+
+    found_words = 0
+    with open(glove_txt_path, 'r', encoding='utf-8') as f:
+        for line in f:
+            values = line.rstrip().split(' ')
+            word = " ".join(values[:-300])
+            
+            if word in word2idx:
+                vector = np.asarray(values[-300:], dtype='float32')
+                matrix[word2idx[word]] = vector
+                found_words += 1
+
+    print(f"Found {found_words} out of {len(word2idx)} words in GloVe.")
+
+    # 3. Save the resulting matrix for next time!
+    print(f"Saving parsed matrix to {saved_matrix_path} for faster loading...")
+    np.save(saved_matrix_path, matrix)
+
+    return torch.FloatTensor(matrix)
 
 def main():
     # Configuration
@@ -623,6 +656,16 @@ def main():
     val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, collate_fn=custom_collate_fn)
     test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, collate_fn=custom_collate_fn)
 
+    # Load the GloVe matrix
+    glove_file_path = 'glove.840B.300d-003.txt'
+    pretrained_matrix = load_glove_embeddings(glove_file_path, dataset.word2idx, EMBED_DIM)
+
+    # Load custom fine-tuned matrix directly. NOTE: set freeze_embeddings=True when using this.
+    # Comment out the 
+    # Load only after training the model with freeze_embeddings=False to allow the embeddings to adapt, then save the adapted matrix and load it here for a second round of training with freeze_embeddings=True.
+    # print("Loading custom fine-tuned embeddings...")
+    # custom_matrix = np.load('emobank_custom_embeddings2.npy')
+
     # Create model
     model = TreeStructuredRCNNLSTM(
         vocab_size=dataset.vocab_size,
@@ -630,7 +673,9 @@ def main():
         hidden_size=HIDDEN_SIZE,
         num_filters=NUM_FILTERS,
         filter_sizes=FILTER_SIZES,
-        dropout=0.5
+        dropout=0.5,
+        pretrained_embeddings=pretrained_matrix,
+        freeze_embeddings=True
     )
     model = model.to(device)
 
@@ -645,8 +690,17 @@ def main():
         val_loader,
         device,
         epochs=EPOCHS,
-        lr=LEARNING_RATE
+        lr=LEARNING_RATE,
+        
     )
+    # Extract the learned weights back into a NumPy array
+    adapted_matrix = model.embedding.weight.detach().cpu().numpy()
+    
+    # Save them to a new file
+    np.save('emobank_custom_embeddings2.npy', adapted_matrix)
+    print("Saved the custom embeddings!")
+
+    
 
     # Evaluate on test set
     model.eval()
