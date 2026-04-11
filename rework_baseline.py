@@ -442,7 +442,7 @@ def run_training(config):
 
         # Save predictions to CSV
         df_pred = pd.DataFrame({'true': true, 'predicted': pred})
-        pred_file = os.path.join(output_dir, f'{name}_predictions.csv')
+        pred_file = os.path.join(output_dir, f'{name}_predictions_reworked_baseline.csv')
         df_pred.to_csv(pred_file, index=False)
         print(f"Saved predictions for {name} to {pred_file}")
 
