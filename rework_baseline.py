@@ -193,7 +193,7 @@ def build_tensor(all_regions, vocab, max_regions, max_region_len):
 def build_regional_cnn_lstm(vocab_size, embed_dim, embedding_matrix,
                             max_region_len, max_regions, num_outputs,
                             cnn_filters=60, filter_length=3, pool_length=2,
-                            lstm_units=120, recurrent_dropout=0.25, spatial_dropout=0.1):
+                            lstm_units=120, recurrent_dropout=0.25, spatial_dropout=0.2):
     region_input = layers.Input(shape=(max_regions, max_region_len), name='region_input')
     mask_input = layers.Input(shape=(max_regions,), dtype='bool', name='mask_input')
 
