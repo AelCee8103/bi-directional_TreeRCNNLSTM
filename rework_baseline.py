@@ -476,7 +476,7 @@ def main():
     parser.add_argument('--dataset', type=str, default='emobank',
                         choices=DATASET_REGISTRY.keys())
     parser.add_argument('--data_path', type=str, default='./writer_10240.csv',)
-    parser.add_argument('--glove_path', type=str,  default='./glove.840B.300d.txt', required=True)
+    parser.add_argument('--glove_path', type=str,  default='./glove.840B.300d.txt')
     parser.add_argument('--depth', type=int, default=4)
     parser.add_argument('--embed_dim', type=int, default=300)
     parser.add_argument('--batch_size', type=int, default=32)
