@@ -473,11 +473,11 @@ def run_training(config):
 # ============================================================
 def main():
     parser = argparse.ArgumentParser(description="Train Regional CNN-LSTM on a dataset")
-    parser.add_argument('--dataset', type=str, required=True, default='emobank',
+    parser.add_argument('--dataset', type=str, default='emobank',
                         choices=DATASET_REGISTRY.keys())
-    parser.add_argument('--data_path', type=str, required=True, default='./writer_10240.csv',)
+    parser.add_argument('--data_path', type=str, default='./writer_10240.csv',)
     parser.add_argument('--glove_path', type=str,  default='./glove.840B.300d.txt', required=True)
-    parser.add_argument('--depth', type=int, default=3)
+    parser.add_argument('--depth', type=int, default=4)
     parser.add_argument('--embed_dim', type=int, default=300)
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--epochs', type=int, default=20)
