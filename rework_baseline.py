@@ -359,7 +359,7 @@ def run_training(config):
             pickle.dump(all_regions, f)
         print("Parsed and cached regions.")
 
-        # ---------- Vocabulary & Embeddings (with caching) ----------
+    # ---------- Vocabulary & Embeddings (with caching) ----------
     embed_cache_path = get_embedding_cache_path(config, all_regions)
     embed_matrix_cache = embed_cache_path.replace('.pkl', '_matrix.npy')
 
@@ -427,7 +427,11 @@ def run_training(config):
         batch_size=config.get('batch_size', 32), epochs=config.get('epochs', 20),
         callbacks=[early_stop], verbose=1)
 
-    # ---------- Evaluate ----------
+        # ---------- Evaluate and Save Results Automatically ----------
+    # Create default results directory
+    output_dir = './results'
+    os.makedirs(output_dir, exist_ok=True)
+
     preds = model.predict([X_test, mask_test])
     if num_outputs == 1:
         preds = [preds]
@@ -435,6 +439,14 @@ def run_training(config):
     for i, name in enumerate(target_names):
         true = y_test[:, i]
         pred = preds[i].flatten()
+
+        # Save predictions to CSV
+        df_pred = pd.DataFrame({'true': true, 'predicted': pred})
+        pred_file = os.path.join(output_dir, f'{name}_predictions.csv')
+        df_pred.to_csv(pred_file, index=False)
+        print(f"Saved predictions for {name} to {pred_file}")
+
+        # Compute metrics
         try:
             mae = mean_absolute_error(true, pred)
             pearson_corr, _ = pearsonr(true, pred)
@@ -443,6 +455,15 @@ def run_training(config):
             mae = np.nan
             pearson_corr = np.nan
         print(f"{name} - MAE: {mae:.4f}, Pearson r: {pearson_corr:.4f}")
+
+        # Save metrics to a text file
+        metrics_file = os.path.join(output_dir, f'{name}_metrics.txt')
+        with open(metrics_file, 'w') as f:
+            f.write(f"MAE: {mae:.4f}\nPearson r: {pearson_corr:.4f}\n")
+
+    # Save the trained model (optional, but useful for full reproducibility)
+    model.save(os.path.join(output_dir, 'trained_model.h5'))
+    print(f"Model saved to {output_dir}/trained_model.h5")
 
     return model, history
 
