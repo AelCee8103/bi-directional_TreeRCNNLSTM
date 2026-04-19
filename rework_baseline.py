@@ -473,7 +473,7 @@ def run_training(config):
 # ============================================================
 def main():
     parser = argparse.ArgumentParser(description="Train Regional CNN-LSTM on a dataset")
-    parser.add_argument('--dataset', type=str, default='emobank',
+    parser.add_argument('--dataset', type=str, default='emobank_valence_writer',
                         choices=DATASET_REGISTRY.keys())
     parser.add_argument('--data_path', type=str, default='./writer_10240.csv',)
     parser.add_argument('--glove_path', type=str,  default='./glove.840B.300d.txt')
@@ -493,7 +493,7 @@ def main():
 
 if __name__ == "__main__":
     # If in IPython/Jupyter, provide a convenience example
-    try:
+    try:s
         get_ipython()
         print("Notebook environment detected. Use run_training(config_dict) to train.")
         print("Example config:")

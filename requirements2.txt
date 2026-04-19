@@ -1,6 +1,0 @@
-stanza 
-gensim 
-tensorflow 
-scikit-learn 
-pandas 
-numpy
